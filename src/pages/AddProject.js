@@ -29,7 +29,8 @@ const AddProject = () => {
     fetchUsers();
   }, []); // Empty dependency array means this effect runs once on mount
 
-  const onAddProjectSubmit = async () => {
+  const onAddProjectSubmit = async (e) => {
+    e.preventDefault();
     const name = nameRef.current.value;
     const description = descriptionRef.current.value;
     const date_created = new Date().toISOString().slice(0, 10);
@@ -77,7 +78,7 @@ const AddProject = () => {
   return (
     <section className="addproject-section">
       <h3>Create new project</h3>
-      <form onSubmit={onAddProjectSubmit}>
+      <form onSubmit={(e) => onAddProjectSubmit(e)}>
         <div className="form-group">
           <label htmlFor="project-name">Project name</label>
           <input type="text" id="project-name" ref={nameRef} />
