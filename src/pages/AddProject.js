@@ -48,15 +48,12 @@ const AddProject = () => {
       "https://projects-server-api.onrender.com/projects",
       newProject
     );
-    const data = await responce.json();
 
-    if (data) {
-      nameRef.current.value = "";
-      descriptionRef.current.value = "";
-      date_dueRef.current.value = "";
-      categoryRef.current.value = "";
-      setMembers([]);
-    }
+    nameRef.current.value = "";
+    descriptionRef.current.value = "";
+    date_dueRef.current.value = "";
+    categoryRef.current.value = "";
+    setMembers([]);
   };
 
   const AddMember = () => {
