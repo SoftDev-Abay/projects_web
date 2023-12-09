@@ -215,8 +215,6 @@ const ChatPage = () => {
     return content;
   };
 
-  if (activeChat == null) return <div>Loading...</div>;
-
   return (
     <>
       {chatsModalOpen && (
@@ -224,76 +222,91 @@ const ChatPage = () => {
           modalHandlier={setChatsModalOpen}
           setChat={setActiveChat}
           userChats={userChats}
-          activeChatId={activeChat.id}
+          activeChatId={activeChat?.id}
         />
       )}
       <div className="chat-container">
-        <div className="header">
-          <div className="user-info-wrapper">
-            <img
-              src={
-                activeChat.members[0].avatar_name != null
-                  ? `https://projects-server-api.onrender.com/images/${activeChat.members[0].avatar_name}`
-                  : "https://www.shutterstock.com/image-vector/blank-avatar-photo-place-holder-600nw-1095249842.jpg"
-              }
-              alt=""
-            />
-            <div>
-              <p className="user-name">
-                {activeChat ? activeChat.members[0].username : "Dummy user"}
-              </p>
-              <p className="user-role">
-                {activeChat ? "Full Stack Developer" : "Dummy Vacansy"}
-              </p>
-            </div>
-          </div>
-          <div className="settings-wrapper">
-            <FaEllipsisV
-              className="icon"
-              onClick={() => {
-                setIsDropdownOpen(!isDropdownOpen);
-              }}
-            />
-
-            {isDropdownOpen && (
-              <div className="settings-dropdown">
-                <div
-                  className="settings-item"
-                  onClick={() => {
-                    setChatsModalOpen(true);
-                    setIsDropdownOpen(false);
-                  }}
-                >
-                  <span>💬</span>
-                  <span>Chats</span>
-                </div>
-                <div className="settings-item">
-                  <span>🗑️</span>
-                  <span>Clear Chat</span>
+        {activeChat != null ? (
+          <>
+            <div className="header">
+              <div className="user-info-wrapper">
+                <img
+                  src={
+                    activeChat.members[0].avatar_name != null
+                      ? `https://projects-server-api.onrender.com/images/${activeChat.members[0].avatar_name}`
+                      : "https://www.shutterstock.com/image-vector/blank-avatar-photo-place-holder-600nw-1095249842.jpg"
+                  }
+                  alt=""
+                />
+                <div>
+                  <p className="user-name">
+                    {activeChat ? activeChat.members[0].username : "Dummy user"}
+                  </p>
+                  <p className="user-role">
+                    {activeChat ? "Full Stack Developer" : "Dummy Vacansy"}
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-        <div className="body">
-          {getChatBodyContent()}
+              <div className="settings-wrapper">
+                <FaEllipsisV
+                  className="icon"
+                  onClick={() => {
+                    setIsDropdownOpen(!isDropdownOpen);
+                  }}
+                />
 
-          <div ref={dummyMessageLastRef}></div>
-        </div>
-        <div className="footer">
-          <input
-            type="text"
-            placeholder="Write message..."
-            value={message}
-            onChange={(e) => {
-              setMessage(e.target.value);
-            }}
-          />
-          <button type="button" className="btn" onClick={handleSendMessage}>
-            <FaPaperPlane className="icon-send" /> <span>Send</span>
-          </button>
-        </div>
-      </div>{" "}
+                {isDropdownOpen && (
+                  <div className="settings-dropdown">
+                    <div
+                      className="settings-item"
+                      onClick={() => {
+                        setChatsModalOpen(true);
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <span>💬</span>
+                      <span>Chats</span>
+                    </div>
+                    <div className="settings-item">
+                      <span>🗑️</span>
+                      <span>Clear Chat</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="body">
+              {getChatBodyContent()}
+
+              <div ref={dummyMessageLastRef}></div>
+            </div>
+            <div className="footer">
+              <input
+                type="text"
+                placeholder="Write message..."
+                value={message}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                }}
+              />
+              <button type="button" className="btn" onClick={handleSendMessage}>
+                <FaPaperPlane className="icon-send" /> <span>Send</span>
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="empty-chat">
+            <div
+              className="text-wrapper"
+              onClick={() => {
+                setChatsModalOpen(true);
+              }}
+            >
+              Select a chat to start messaging
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };

@@ -4,6 +4,22 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  .empty-chat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    .text-wrapper {
+      cursor: pointer;
+      padding: 5px 10px 8px 10px;
+      border-radius: 20px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      opacity: 0.5;
+    }
+  }
   .header {
     position: sticky;
     top: 0;
