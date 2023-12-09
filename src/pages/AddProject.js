@@ -2,6 +2,7 @@ import { React, useState, useRef, useEffect } from "react";
 import "./AddProject.scss";
 import { FaPlus } from "react-icons/fa";
 import { getAllUsers } from "../utility/getAllUsers";
+import axios from "axios";
 
 const AddProject = () => {
   const [members, setMembers] = useState([]);
@@ -42,13 +43,9 @@ const AddProject = () => {
       category,
       members,
     };
-    const responce = await fetch(
+    const responce = await axios.post(
       "https://projects-server-api.onrender.com/projects",
-      {
-        method: "POST",
-        body: JSON.stringify(newProject),
-        headers: { "Content-Type": "application/json" },
-      }
+      newProject
     );
     const data = await responce.json();
 
