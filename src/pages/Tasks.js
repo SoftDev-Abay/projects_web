@@ -8,6 +8,7 @@ import { DragDropContext } from "react-beautiful-dnd";
 import TasksColumn from "../components/TasksColumn";
 import { useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
+import EditTaskModal from "../modals/EditTaskModal";
 
 const Tasks = () => {
   const { user } = useAuthContext();
@@ -52,7 +53,6 @@ const Tasks = () => {
         `https://projects-server-api.onrender.com/user_tasks/${user.id}`
       );
       const data = await result.json();
-
       await setUserTasks(data);
     } catch (error) {
       console.error(error);
@@ -64,7 +64,7 @@ const Tasks = () => {
   const updateTaskStatus = async (taskId, status) => {
     try {
       const result = await fetch(
-        `https://projects-server-api.onrender.com/task/${taskId}`,
+        `https://projects-server-api.onrender.com/task/status/${taskId}`,
         {
           method: "PUT",
           headers: {
@@ -170,13 +170,19 @@ const Tasks = () => {
 
   return (
     <>
-      {isOpenTaskModal && (
-        <TaskModal
-          isOpen={isOpenTaskModal}
-          modalHandlier={TaskModalHandlier}
-          handleDeleteTask={handleDeleteTask}
-        />
-      )}
+      {isOpenTaskModal &&
+        (isOpenTaskModal.task_user_role === "admin" ? (
+          <EditTaskModal
+            isOpen={isOpenTaskModal}
+            modalHandlier={TaskModalHandlier}
+            handleDeleteTask={handleDeleteTask}
+          />
+        ) : (
+          <TaskModal
+            isOpen={isOpenTaskModal.id}
+            modalHandlier={TaskModalHandlier}
+          />
+        ))}
       <CreateTaskModal
         isOpen={isOpenCreateTaskModal}
         modalHandlier={CreateTaskModalHandlier}

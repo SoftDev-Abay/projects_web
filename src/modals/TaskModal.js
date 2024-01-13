@@ -11,13 +11,15 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import Comments from "../components/Comments";
-
+import axios from "axios";
 import { FiCircle } from "react-icons/fi";
 import { ImageConfig } from "../config/ImageConfig";
 import { useEffect } from "react";
+import Subtasks from "../components/Subtasks";
 
 const TaskModal = ({ isOpen, modalHandlier, handleDeleteTask }) => {
   const [task, setTask] = useState(null);
+  const [changedSubtasks, setChangedSubtasks] = useState([]);
 
   const getTaskInfo = useCallback(async () => {
     try {
@@ -26,6 +28,7 @@ const TaskModal = ({ isOpen, modalHandlier, handleDeleteTask }) => {
       );
       const data = await res.json();
       setTask(data);
+      setChangedSubtasks(data.subtasks);
     } catch (error) {
       console.error(error);
     }
@@ -38,6 +41,22 @@ const TaskModal = ({ isOpen, modalHandlier, handleDeleteTask }) => {
   if (!task) {
     return null;
   }
+
+  const editTaskHandlier = async () => {
+    try {
+      const res = await axios.put(
+        `https://projects-server-api.onrender.com/task/subtasks/${isOpen}`,
+        {
+          subtasks: changedSubtasks,
+        }
+      );
+      alert("Task updated successfully!");
+      modalHandlier(false);
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong!");
+    }
+  };
 
   const {
     id,
@@ -102,23 +121,10 @@ const TaskModal = ({ isOpen, modalHandlier, handleDeleteTask }) => {
                 <br />
                 <div className="subtasks-container">
                   <h3>Subtasks</h3>
-                  <div className="subtasks-list">
-                    {task?.subtasks?.map((subtask) => {
-                      return (
-                        <div className="subtask-item">
-                          {!subtask.completed ? (
-                            <FiCircle className="icon" />
-                          ) : (
-                            <FaCheckCircle
-                              className="icon"
-                              // style={{ color: "#2ecc71" }}
-                            />
-                          )}
-                          <input type="text" value={subtask.text} />
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <Subtasks
+                    subtasks={changedSubtasks}
+                    setSubtasks={setChangedSubtasks}
+                  />
                 </div>
 
                 {attachments.length > 0 && (
@@ -151,24 +157,41 @@ const TaskModal = ({ isOpen, modalHandlier, handleDeleteTask }) => {
                   </div>
                 )}
                 {/* <Comments /> */}
-                <button
-                  className="modal-button close-modal"
-                  onClick={() => {
-                    modalHandlier(false);
-                  }}
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
                 >
-                  Close!
-                </button>
-                <button
-                  className="modal-button close-modal"
-                  style={{ marginLeft: "20px" }}
-                  onClick={() => {
-                    handleDeleteTask(isOpen);
-                    modalHandlier(false);
-                  }}
-                >
-                  Delete
-                </button>
+                  <div>
+                    <button
+                      className="modal-button close-modal"
+                      onClick={() => {
+                        modalHandlier(false);
+                      }}
+                    >
+                      Close!
+                    </button>
+                    <button
+                      className="modal-button close-modal"
+                      style={{ marginLeft: "20px" }}
+                      onClick={() => {
+                        handleDeleteTask(isOpen);
+                        modalHandlier(false);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  {task.subtasks != changedSubtasks && (
+                    <button
+                      className="modal-button close-modal"
+                      style={{ marginLeft: "20px" }}
+                      onClick={() => {
+                        editTaskHandlier();
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

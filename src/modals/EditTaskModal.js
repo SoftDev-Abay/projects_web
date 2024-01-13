@@ -1,4 +1,4 @@
-import { React, useRef, useState, useEffect } from "react";
+import { React, useRef, useState, useEffect, useCallback } from "react";
 import "./CreateTaskModal.scss";
 import {
   FaGgCircle,
@@ -16,12 +16,16 @@ import { FiCheckCircle, FiCircle } from "react-icons/fi";
 import { ImageConfig } from "../config/ImageConfig";
 import { getAllUsers } from "../utility/getAllUsers";
 import { useAuthContext } from "../context/AuthContext";
+import AttachmentsAddSpace from "../components/AttachmentsAddSpace";
 
-const CreateTaskModal = ({ isOpen, modalHandlier }) => {
+const EditTaskModal = ({ isOpen, modalHandlier }) => {
   const [subtasks, setSubtasks] = useState([]);
   const [fileList, setFileList] = useState([]);
+  const [previousFileList, setPreviousFileList] = useState([]); //
+  const [initialFileList, setInitialFileList] = useState([]); // [
   const [projectName, setProjectName] = useState("");
   const [userProjects, setUserProjects] = useState(null);
+
   const { user } = useAuthContext();
   const [members, setMembers] = useState([user.username]);
 
@@ -29,8 +33,6 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
   const taskTitle = useRef(null);
   const taskDescription = useRef(null);
   const subtaskInput = useRef(null);
-
-  const wrapperRef = useRef(null);
 
   useEffect(() => {
     getUserProjects();
@@ -48,24 +50,30 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
     }
   };
 
-  const onDragOver = () => {
-    wrapperRef.current.classList.add("dragover");
-  };
-  const onDragLeave = () => {
-    wrapperRef.current.classList.remove("dragover");
-  };
-  const onDrop = () => {
-    wrapperRef.current.classList.add("dragover");
-  };
+  const getTaskInfo = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `https://projects-server-api.onrender.com/task/${isOpen.id}`
+      );
+      const data = await res.json();
+      console.log(data);
 
-  const onFileDrop = (e) => {
-    const newFile = e.target.files[0];
-    console.log(newFile, newFile.type, newFile.type.split("/")[1]);
-    if (newFile) {
-      const updatedFileList = [...fileList, newFile];
-      setFileList(updatedFileList);
+      setProjectName(data.project_name);
+      setMembers(data.members.map((member) => member.username));
+      setSubtasks(data.subtasks);
+
+      setInitialFileList(data.attachments);
+      setPreviousFileList(data.attachments);
+      taskTitle.current.value = data.name;
+      taskDescription.current.value = data.description;
+    } catch (error) {
+      console.error(error);
     }
-  };
+  });
+
+  useEffect(() => {
+    getTaskInfo();
+  }, [isOpen]);
 
   const fileRemove = (file) => {
     const updatedFileList = [...fileList];
@@ -80,29 +88,51 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
     setSubtasks(updatedSubtasks);
   };
 
-  const onTaskCreate = async () => {
-    const formData = new FormData();
-    formData.append("name", taskTitle.current.value);
-    formData.append("description", taskDescription.current.value);
-    formData.append("projectName", projectName);
-    formData.append("date_created", new Date().toISOString());
-    formData.append("status", "ready");
-    members.forEach((username, index) => {
-      formData.append(`members[${index}]`, username);
-    });
-    formData.append("subtasks", JSON.stringify(subtasks));
+  const onTaskUpdate = async () => {
+    try {
+      const formData = new FormData();
 
-    fileList.forEach((file) => {
-      formData.append("files", file);
-    });
-    const result = await axios.post(
-      "https://projects-server-api.onrender.com/tasks",
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
+      formData.append("name", taskTitle.current.value);
+      formData.append("description", taskDescription.current.value);
+      formData.append("projectName", projectName);
+      formData.append("date_created", new Date().toISOString());
+      members.forEach((username, index) => {
+        formData.append(`members[${index}]`, username);
+      });
+      formData.append("subtasks", JSON.stringify(subtasks));
+
+      fileList.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const deletedFiles = initialFileList.filter(
+        (file) => !previousFileList.includes(file)
+      );
+
+      formData.append("deletedFiles", JSON.stringify(deletedFiles));
+
+      const responce = await axios.put(
+        `https://projects-server-api.onrender.com/task/${isOpen.id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log(responce);
+
+      if (responce.status === 200) {
+        alert("Task updated successfully");
+        modalHandlier(false);
       }
-    );
+    } catch (error) {
+      alert("Task update failed");
+      console.error(error);
+    }
   };
+
   return (
     <>
       {isOpen && (
@@ -239,10 +269,10 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
                         ref={subtaskInput}
                         onBlur={() => {
                           const newSubtask = {
-                            title: subtaskInput.current.value.trimStart(),
+                            text: subtaskInput.current.value.trimStart(),
                             completed: false,
                           };
-                          if (newSubtask.title.length > 0) {
+                          if (newSubtask.text.length > 0) {
                             const updatedSubtasks = [...subtasks, newSubtask];
                             setSubtasks(updatedSubtasks);
                           }
@@ -271,10 +301,10 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
                           )}
                           <input
                             type="text"
-                            value={subtask.title}
+                            value={subtask.text}
                             onChange={(e) => {
                               const updatedSubtasks = [...subtasks];
-                              updatedSubtasks[index].title = e.target.value;
+                              updatedSubtasks[index].text = e.target.value;
                               setSubtasks(updatedSubtasks);
                             }}
                           />
@@ -298,6 +328,45 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
                 <div className="task-modal-attachments">
                   <h3>Attachments</h3>
                   <div className="attachments-list">
+                    {/* previous attachments */}
+                    {previousFileList?.map((item, index) => {
+                      return (
+                        <div className="attachment-item" key={index}>
+                          <img
+                            src={
+                              ImageConfig[item.file_name.split(".")[1]] ||
+                              ImageConfig["default"]
+                            }
+                            alt=""
+                          />
+                          <div className="attachment-item-info">
+                            <p>
+                              {item.file_name.split(
+                                0,
+                                -(item.file_name.split(".")[1].length + 33)
+                              )}
+                            </p>
+                            <p>20B</p>
+                          </div>
+                          <span
+                            className="attachment-item-del"
+                            onClick={() => {
+                              const updatedPreviousFileList =
+                                previousFileList.filter(
+                                  (filterItem, filterIndex) =>
+                                    filterIndex != index
+                                );
+                              setPreviousFileList(updatedPreviousFileList);
+                            }}
+                          >
+                            &#10006;
+                          </span>
+                        </div>
+                      );
+                    })}
+
+                    {/* new attachments */}
+
                     {fileList?.map((item, index) => {
                       return (
                         <div className="attachment-item" key={index}>
@@ -322,18 +391,11 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
                       );
                     })}
                   </div>
-                  <div
-                    ref={wrapperRef}
-                    onDragOver={onDragOver}
-                    onDragLeave={onDragLeave}
-                    onDrop={onDrop}
-                    className="drop-file-input"
-                  >
-                    <div className="drop-file-input_label">
-                      <p>Click to add / drop your files here</p>
-                    </div>
-                    <input type="file" value="" onChange={onFileDrop} />
-                  </div>
+                  {/* attacheent space here */}
+                  <AttachmentsAddSpace
+                    fileList={fileList}
+                    setFileList={setFileList}
+                  />
                 </div>
                 <div className="modal-footer">
                   <button
@@ -347,11 +409,11 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
                   <button
                     className="modal-button"
                     onClick={() => {
-                      onTaskCreate();
-                      modalHandlier(false);
+                      onTaskUpdate();
+                      // modalHandlier(false);
                     }}
                   >
-                    Upload
+                    Update
                   </button>
                 </div>
               </div>
@@ -363,4 +425,4 @@ const CreateTaskModal = ({ isOpen, modalHandlier }) => {
   );
 };
 
-export default CreateTaskModal;
+export default EditTaskModal;

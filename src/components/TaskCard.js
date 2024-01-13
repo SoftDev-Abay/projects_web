@@ -22,6 +22,7 @@ const TaskCard = ({
   index,
   subtasksCount,
   attachments_count,
+  task_user_role,
 }) => {
   return (
     <Draggable draggableId={`${id}`} key={id} index={index}>
@@ -41,7 +42,7 @@ const TaskCard = ({
                 style={{ cursor: "pointer" }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  modalHandlier(id);
+                  modalHandlier({ id, task_user_role });
                 }}
               />
             </div>

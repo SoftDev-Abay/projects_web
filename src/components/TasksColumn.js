@@ -33,6 +33,7 @@ const TasksColumn = ({ status, tasks, id, modalHandlier }) => {
                   subtasksCount={task.subtasks_count}
                   modalHandlier={modalHandlier}
                   index={index}
+                  task_user_role={task.task_user_role}
                 />
               ))}
 
